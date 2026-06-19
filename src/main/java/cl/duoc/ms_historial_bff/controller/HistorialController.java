@@ -5,6 +5,7 @@ import cl.duoc.ms_historial_bff.model.dto.HistorialUpdateDTO;
 import cl.duoc.ms_historial_bff.model.dto.HistorialConDetallesDTO;
 import cl.duoc.ms_historial_bff.service.HistorialService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,39 +19,65 @@ public class HistorialController {
     private HistorialService historialService;
 
     @PostMapping("/registrar")
-    public HistorialDTO registrarHistorial(@RequestBody HistorialDTO historialDTO) {
-        return historialService.registrarHistorial(historialDTO);
+    public ResponseEntity<HistorialDTO> registrarHistorial(@RequestBody HistorialDTO historialDTO) {
+        try {
+            HistorialDTO historial = historialService.registrarHistorial(historialDTO);
+            return new ResponseEntity<>(historial, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/listar")
-    public List<HistorialDTO> listarHistoriales() {
-        return historialService.listarHistoriales();
+    public ResponseEntity<List<HistorialDTO>> listarHistoriales() {
+        try {
+            List<HistorialDTO> historiales = historialService.listarHistoriales();
+            return ResponseEntity.ok(historiales);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/listar/detalles")
-    public List<HistorialConDetallesDTO> listarHistorialesConDetalles() {
-        return historialService.listarHistorialesConDetalles();
+    public ResponseEntity<List<HistorialConDetallesDTO>> listarHistorialesConDetalles() {
+        try {
+            List<HistorialConDetallesDTO> historiales = historialService.listarHistorialesConDetalles();
+            return ResponseEntity.ok(historiales);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
     }
 
     @GetMapping("/{id}/detalles")
     public ResponseEntity<HistorialConDetallesDTO> obtenerHistorialConDetalles(@PathVariable Long id) {
-        HistorialConDetallesDTO historial = historialService.obtenerHistorialConDetalles(id);
-        if (historial != null) {
-            return ResponseEntity.ok(historial);
+        try {
+            HistorialConDetallesDTO historial = historialService.obtenerHistorialConDetalles(id);
+            if (historial != null) {
+                return ResponseEntity.ok(historial);
+            }
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
         }
-        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/eliminar/{id}")
-    public ResponseEntity<String> eliminarHistorial (@RequestParam Long id) {
-
-        historialService.eliminarHistorial(id);
-
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> eliminarHistorial(@PathVariable Long id) {
+        try {
+            historialService.eliminarHistorial(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PutMapping("/actualizar")
-    public ResponseEntity<HistorialUpdateDTO> actualizarHistorial (@RequestBody HistorialUpdateDTO historial) {
-        return ResponseEntity.ok(historialService.actualizarHistorial(historial));
+    public ResponseEntity<HistorialUpdateDTO> actualizarHistorial(@RequestBody HistorialUpdateDTO historial) {
+        try {
+            HistorialUpdateDTO historialActualizado = historialService.actualizarHistorial(historial);
+            return ResponseEntity.ok(historialActualizado);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
