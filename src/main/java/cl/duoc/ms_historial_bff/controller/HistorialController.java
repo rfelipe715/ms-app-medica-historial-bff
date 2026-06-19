@@ -2,6 +2,7 @@ package cl.duoc.ms_historial_bff.controller;
 
 import cl.duoc.ms_historial_bff.model.dto.HistorialDTO;
 import cl.duoc.ms_historial_bff.model.dto.HistorialUpdateDTO;
+import cl.duoc.ms_historial_bff.model.dto.HistorialConDetallesDTO;
 import cl.duoc.ms_historial_bff.service.HistorialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,20 @@ public class HistorialController {
     @GetMapping("/listar")
     public List<HistorialDTO> listarHistoriales() {
         return historialService.listarHistoriales();
+    }
+
+    @GetMapping("/listar/detalles")
+    public List<HistorialConDetallesDTO> listarHistorialesConDetalles() {
+        return historialService.listarHistorialesConDetalles();
+    }
+
+    @GetMapping("/{id}/detalles")
+    public ResponseEntity<HistorialConDetallesDTO> obtenerHistorialConDetalles(@PathVariable Long id) {
+        HistorialConDetallesDTO historial = historialService.obtenerHistorialConDetalles(id);
+        if (historial != null) {
+            return ResponseEntity.ok(historial);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/eliminar/{id}")
