@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@FeignClient(name = "historial-bs", url = "http://localhost:8094/api/v1/historiales")
+@FeignClient(name = "historial-bs", url = "${historial-bs.url:http://localhost:9091/api/v1/historiales}")
 public interface HistorialBsRestClient {
 
     @PostMapping
