@@ -16,9 +16,12 @@ public interface HistorialBsRestClient {
     @GetMapping
     List<HistorialDTO> listarHistoriales();
 
-    @DeleteMapping
-    public void eliminarHistorial(Long id);
+    @GetMapping("/{id}")
+    HistorialDTO obtenerHistorialPorId(@PathVariable("id") Long id);
 
-    @PutMapping
-    public HistorialUpdateDTO actualizarHistorial(@RequestBody HistorialUpdateDTO historial);
+    @DeleteMapping("/{id}")
+    void eliminarHistorial(@PathVariable("id") Long id);
+
+    @PutMapping("/{id}")
+    HistorialDTO actualizarHistorial(@PathVariable("id") Long id, @RequestBody HistorialUpdateDTO historial);
 }

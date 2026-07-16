@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,37 +38,35 @@ public class HistorialController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos en la solicitud")
     })
     @PostMapping("/registrar")
-    public ResponseEntity<HistorialDTO> registrarHistorial(@RequestBody HistorialDTO historialDTO) {
-        try {
-            HistorialDTO historial = historialService.registrarHistorial(historialDTO);
-            return new ResponseEntity<>(historial, HttpStatus.CREATED);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    public ResponseEntity<HistorialDTO> registrarHistorial(@Valid @RequestBody HistorialDTO historialDTO) {
+        HistorialDTO historial = historialService.registrarHistorial(historialDTO);
+        return new ResponseEntity<>(historial, HttpStatus.CREATED);
     }
 
     @Operation(summary = "Listar todos los historiales", description = "Retorna la lista completa de historiales clínicos registrados en el sistema.")
     @ApiResponse(responseCode = "200", description = "Lista de historiales obtenida exitosamente")
     @GetMapping("/listar")
     public ResponseEntity<List<HistorialDTO>> listarHistoriales() {
-        try {
-            List<HistorialDTO> historiales = historialService.listarHistoriales();
-            return ResponseEntity.ok(historiales);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        List<HistorialDTO> historiales = historialService.listarHistoriales();
+        return ResponseEntity.ok(historiales);
+    }
+
+    @Operation(summary = "Buscar historial por ID", description = "Retorna los datos de un historial clínico específico según su identificador único.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Historial encontrado"),
+            @ApiResponse(responseCode = "404", description = "No existe un historial con el ID indicado")
+    })
+    @GetMapping("/{id}")
+    public ResponseEntity<HistorialDTO> obtenerHistorialPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(historialService.obtenerHistorialPorId(id));
     }
 
     @Operation(summary = "Listar historiales con detalles", description = "Retorna los historiales enriquecidos con los datos del paciente y las citas asociadas.")
     @ApiResponse(responseCode = "200", description = "Lista de historiales con detalles obtenida exitosamente")
     @GetMapping("/listar/detalles")
     public ResponseEntity<List<HistorialConDetallesDTO>> listarHistorialesConDetalles() {
-        try {
-            List<HistorialConDetallesDTO> historiales = historialService.listarHistorialesConDetalles();
-            return ResponseEntity.ok(historiales);
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+        List<HistorialConDetallesDTO> historiales = historialService.listarHistorialesConDetalles();
+        return ResponseEntity.ok(historiales);
     }
 
     @Operation(summary = "Buscar historial con detalles", description = "Retorna un historial clínico específico enriquecido con los datos del paciente y las citas asociadas.")
@@ -77,15 +76,11 @@ public class HistorialController {
     })
     @GetMapping("/{id}/detalles")
     public ResponseEntity<HistorialConDetallesDTO> obtenerHistorialConDetalles(@PathVariable Long id) {
-        try {
-            HistorialConDetallesDTO historial = historialService.obtenerHistorialConDetalles(id);
-            if (historial != null) {
-                return ResponseEntity.ok(historial);
-            }
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+        HistorialConDetallesDTO historial = historialService.obtenerHistorialConDetalles(id);
+        if (historial != null) {
+            return ResponseEntity.ok(historial);
         }
+        return ResponseEntity.notFound().build();
     }
 
     @Operation(summary = "Eliminar un historial", description = "Elimina de forma permanente un registro de historial clínico del sistema, identificado por su ID.")
@@ -95,12 +90,8 @@ public class HistorialController {
     })
     @DeleteMapping("/eliminar/{id}")
     public ResponseEntity<Void> eliminarHistorial(@PathVariable Long id) {
-        try {
-            historialService.eliminarHistorial(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+        historialService.eliminarHistorial(id);
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Actualizar un historial existente", description = "Actualiza los datos de un historial clínico ya registrado.")
@@ -108,13 +99,9 @@ public class HistorialController {
             @ApiResponse(responseCode = "200", description = "Historial actualizado exitosamente"),
             @ApiResponse(responseCode = "404", description = "No existe un historial con el ID indicado")
     })
-    @PutMapping("/actualizar")
-    public ResponseEntity<HistorialUpdateDTO> actualizarHistorial(@RequestBody HistorialUpdateDTO historial) {
-        try {
-            HistorialUpdateDTO historialActualizado = historialService.actualizarHistorial(historial);
-            return ResponseEntity.ok(historialActualizado);
-        } catch (Exception e) {
-            return ResponseEntity.notFound().build();
-        }
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<HistorialDTO> actualizarHistorial(@PathVariable Long id, @Valid @RequestBody HistorialUpdateDTO historial) {
+        HistorialDTO historialActualizado = historialService.actualizarHistorial(id, historial);
+        return ResponseEntity.ok(historialActualizado);
     }
 }
