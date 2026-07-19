@@ -9,6 +9,8 @@ import cl.duoc.ms_historial_bff.model.dto.HistorialDTO;
 import cl.duoc.ms_historial_bff.model.dto.HistorialUpdateDTO;
 import cl.duoc.ms_historial_bff.model.dto.HistorialConDetallesDTO;
 import feign.FeignException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class HistorialService {
+
+    private static final Logger log = LoggerFactory.getLogger(HistorialService.class);
 
     @Autowired
     private HistorialBsRestClient historialBsRestClient;
@@ -35,8 +39,10 @@ public class HistorialService {
         try {
             return historialBsRestClient.obtenerHistorialPorId(id);
         } catch (FeignException.NotFound e) {
+            log.warn("Historial id={} no encontrado en ms-historial-bs", id);
             throw new HistorialNotFoundException(id);
         } catch (FeignException e) {
+            log.error("ms-historial-bs no disponible al buscar historial id={}: {}", id, e.getMessage());
             throw new ServicioNoDisponibleException("ms-historial-bs", e);
         }
     }
@@ -49,8 +55,13 @@ public class HistorialService {
 
     public HistorialDTO registrarHistorial(HistorialDTO historialDTO) {
         try {
-            return historialBsRestClient.registrarHistorial(historialDTO);
+            HistorialDTO registrado = historialBsRestClient.registrarHistorial(historialDTO);
+            log.info("Historial registrado con id={}, pacienteId={}, citaId={}",
+                    registrado.getId(), registrado.getPacienteId(), registrado.getCitaId());
+            return registrado;
         } catch (FeignException e) {
+            log.error("ms-historial-bs no disponible al registrar historial para pacienteId={}: {}",
+                    historialDTO.getPacienteId(), e.getMessage());
             throw new ServicioNoDisponibleException("ms-historial-bs", e);
         }
     }
@@ -58,19 +69,26 @@ public class HistorialService {
     public void eliminarHistorial (Long id) {
         try {
             historialBsRestClient.eliminarHistorial(id);
+            log.info("Historial id={} eliminado correctamente", id);
         } catch (FeignException.NotFound e) {
+            log.warn("Intento de eliminar un historial inexistente, id={}", id);
             throw new HistorialNotFoundException(id);
         } catch (FeignException e) {
+            log.error("ms-historial-bs no disponible al eliminar historial id={}: {}", id, e.getMessage());
             throw new ServicioNoDisponibleException("ms-historial-bs", e);
         }
     }
 
     public HistorialDTO actualizarHistorial (Long id, HistorialUpdateDTO historial) {
         try {
-            return historialBsRestClient.actualizarHistorial(id, historial);
+            HistorialDTO actualizado = historialBsRestClient.actualizarHistorial(id, historial);
+            log.info("Historial id={} actualizado correctamente", id);
+            return actualizado;
         } catch (FeignException.NotFound e) {
+            log.warn("Intento de actualizar un historial inexistente, id={}", id);
             throw new HistorialNotFoundException(id);
         } catch (FeignException e) {
+            log.error("ms-historial-bs no disponible al actualizar historial id={}: {}", id, e.getMessage());
             throw new ServicioNoDisponibleException("ms-historial-bs", e);
         }
     }
@@ -99,13 +117,15 @@ public class HistorialService {
         try {
             detalles.setPaciente(pacientesBffRestClient.obtenerPaciente(historialDTO.getPacienteId()));
         } catch (Exception e) {
-            // Silenciar error si no encuentra paciente
+            log.warn("No se pudo enriquecer el historial id={} con datos del paciente id={}: {}",
+                    historialDTO.getId(), historialDTO.getPacienteId(), e.getMessage());
         }
-        
+
         try {
             detalles.setCita(citasBffRestClient.obtenerCita(historialDTO.getCitaId()));
         } catch (Exception e) {
-            // Silenciar error si no encuentra cita
+            log.warn("No se pudo enriquecer el historial id={} con datos de la cita id={}: {}",
+                    historialDTO.getId(), historialDTO.getCitaId(), e.getMessage());
         }
         
         return detalles;
